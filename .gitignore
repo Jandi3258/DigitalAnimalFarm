@@ -1,0 +1,21 @@
+# .NET (bin i obj)
+[Dd]ebug/
+[Rr]elease/
+bin/
+obj/
+
+# IDE - JetBrains (Rider)
+.idea/
+
+# IDE - Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Systemowe (macOS)
+.DS_Store
+
+# Inne
+*.swp
+*~

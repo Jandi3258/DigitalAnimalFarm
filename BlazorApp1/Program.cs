@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddSingleton<BlazorApp1.Logic.GameEngine>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

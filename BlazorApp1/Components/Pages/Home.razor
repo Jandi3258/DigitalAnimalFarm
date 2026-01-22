@@ -1,7 +1,25 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@inject GameEngine Game
+@rendermode InteractiveServer
 
-<h1>Hello, world!</h1>
+<PageTitle>Super Farmer</PageTitle>
 
-Welcome to your new app.
+<h1>Twoja Farma 🐮</h1>
+
+<div class="d-flex flex-wrap">
+    @foreach (var animal in Game.MyHerd)
+    {
+        <div class="card m-2" style="width: 10rem;">
+            <div class="card-body text-center">
+                <h3>@animal.Value</h3>
+                <p>@animal.Key</p>
+                <button class="btn btn-sm btn-primary" @onclick="() => Game.AddAnimal(animal.Key)">Dodaj</button>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Game.HasWon) {
+    <div class="alert alert-success mt-4">Gratulacje! Zostałeś Super Farmerem!</div>
+}
