@@ -1,4 +1,5 @@
 using BlazorApp1.Components;
+using BlazorApp1.Logic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<BlazorApp1.Logic.GameEngine>();
-
+//builder.Services.AddSingleton<BlazorApp1.Logic.GameEngine>();
+builder.Services.AddScoped<GameEngine>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -19,7 +20,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

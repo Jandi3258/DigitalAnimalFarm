@@ -1,25 +1,28 @@
 ﻿@page "/"
-
-@inject GameEngine Game
+@using BlazorApp1.Logic
+@inject GameEngine Engine 
 @rendermode InteractiveServer
-
 <PageTitle>Super Farmer</PageTitle>
 
-<h1>Twoja Farma 🐮</h1>
+<h1>Twoja Farma</h1>
 
-<div class="d-flex flex-wrap">
-    @foreach (var animal in Game.MyHerd)
-    {
-        <div class="card m-2" style="width: 10rem;">
-            <div class="card-body text-center">
-                <h3>@animal.Value</h3>
-                <p>@animal.Key</p>
-                <button class="btn btn-sm btn-primary" @onclick="() => Game.AddAnimal(animal.Key)">Dodaj</button>
-            </div>
-        </div>
-    }
+<div>
+    <p>Króliki: <strong>@Engine.CurrentPlayer.Rabbits</strong></p>
+    <p>Owce: <strong>@Engine.CurrentPlayer.Sheep</strong></p>
+    <p>Swinie: <strong>@Engine.CurrentPlayer.Pigs</strong></p>
+    <p>Krowy: <strong>@Engine.CurrentPlayer.Cows</strong></p>
+    <p>Konie: <strong>@Engine.CurrentPlayer.Horses</strong></p>
+
+
 </div>
 
-@if (Game.HasWon) {
-    <div class="alert alert-success mt-4">Gratulacje! Zostałeś Super Farmerem!</div>
+<button class="btn btn-primary" @onclick="HandleRoll">Rzuć kośćmi</button>
+
+@code {
+    private void HandleRoll()
+    {
+        Engine.RollDice();
+        
+        StateHasChanged(); 
+    }
 }
