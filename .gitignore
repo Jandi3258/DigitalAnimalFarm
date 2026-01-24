@@ -1,21 +1,47 @@
-# .NET (bin i obj)
-[Dd]ebug/
-[Rr]elease/
-bin/
-obj/
+## --- .NET Core / Build ---
+[Bb]in/
+[Oo]bj/
+# Generated files
+*.generated.cs
 
-# IDE - JetBrains (Rider)
+## --- IDE: JetBrains (Rider, ReSharper) ---
 .idea/
+*.sln.iml
+*.c.iml
+# User-specific configurations (do not commit these)
+*.csproj.user
+*.sln.DotSettings.User
 
-# IDE - Visual Studio
+## --- IDE: Visual Studio ---
 .vs/
+*.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Systemowe (macOS)
-.DS_Store
+## --- Web / Blazor / Frontend ---
+# If using npm/js
+node_modules/
+# npm error logs
+npm-debug.log
+yarn-error.log
 
-# Inne
+## --- Tests & Results ---
+TestResults/
+*.trx
+
+## --- Config & Secrets ---
+
+appsettings.Development.json
+appsettings.Local.json
+.env
+
+## --- OS Generated ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+## --- Logs & Misc ---
+*.log
 *.swp
 *~
