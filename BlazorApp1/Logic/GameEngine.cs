@@ -7,8 +7,22 @@ public class GameEngine
     public Player CurrentPlayer { get; private set; } = new Player();
     public Dictionary<AnimalType, int> MainHerd { get; private set; }
     public (AnimalType Die1, AnimalType Die2)? LastRoll { get; private set; }
-    
-    private Random _random = new Random();
+
+    // Delegat do powiadamiania UI o zdarzeniach (np. "Lis zjadł króliki!")
+    public Action<string>? OnGameMessage; 
+
+    private readonly Random _random = new();
+
+    // Słownik delegatów mapujący Typ Zwierzęcia na akcje dostępu do właściwości gracza.
+    // Dzięki temu eliminujemy wielkie switche w GetPlayerCount i Add/Remove.
+    private readonly Dictionary<AnimalType, (Func<Player, int> Get, Action<Player, int> Add, Action<Player, bool> SetDog)> _playerInventoryMap;
+
+    // Słownik wartości zwierząt (stałe)
+    private readonly Dictionary<AnimalType, int> _animalValues = new()
+    {
+        { AnimalType.Rabbit, 1 }, { AnimalType.Sheep, 6 }, { AnimalType.Pig, 12 },
+        { AnimalType.Cow, 36 }, { AnimalType.Horse, 72 }, { AnimalType.SmallDog, 6 }, { AnimalType.BigDog, 36 }
+    };
 
     public GameEngine()
     {
@@ -18,32 +32,49 @@ public class GameEngine
             { AnimalType.Cow, 12 }, { AnimalType.Horse, 4 },
             { AnimalType.SmallDog, 4 }, { AnimalType.BigDog, 2 }
         };
+
+        // Inicjalizacja mapowania akcji (Delegaty)
+        _playerInventoryMap = new()
+        {
+            { AnimalType.Rabbit, (p => p.Rabbits, (p, v) => p.Rabbits += v, (_, _) => { }) },
+            { AnimalType.Sheep, (p => p.Sheep, (p, v) => p.Sheep += v, (_, _) => { }) },
+            { AnimalType.Pig, (p => p.Pigs, (p, v) => p.Pigs += v, (_, _) => { }) },
+            { AnimalType.Cow, (p => p.Cows, (p, v) => p.Cows += v, (_, _) => { }) },
+            { AnimalType.Horse, (p => p.Horses, (p, v) => p.Horses += v, (_, _) => { }) },
+            { AnimalType.SmallDog, (p => p.HasSmallDog ? 1 : 0, (_, _) => { }, (p, v) => p.HasSmallDog = v) },
+            { AnimalType.BigDog, (p => p.HasBigDog ? 1 : 0, (_, _) => { }, (p, v) => p.HasBigDog = v) }
+        };
     }
 
     public void RollDice()
     {
         LastRoll = GetDiceResult();
-        
-        if (LastRoll.Value.Die1 == AnimalType.Fox || LastRoll.Value.Die2 == AnimalType.Fox)
-            ApplyFox();
-        
-        if (LastRoll.Value.Die1 == AnimalType.Wolf || LastRoll.Value.Die2 == AnimalType.Wolf)
-            ApplyWolf();
+        var dice = new[] { LastRoll.Value.Die1, LastRoll.Value.Die2 };
 
-        ApplyGrowth(LastRoll.Value.Die1, LastRoll.Value.Die2);
+        // LINQ: Sprawdź czy wypadł drapieżnik używając Any()
+        if (dice.Any(d => d == AnimalType.Fox)) ApplyFox();
+        if (dice.Any(d => d == AnimalType.Wolf)) ApplyWolf();
+
+        ApplyGrowth(dice);
     }
 
     private void ApplyFox()
     {
         if (CurrentPlayer.HasSmallDog)
         {
-            CurrentPlayer.HasSmallDog = false;
+            ModifyPlayerStock(AnimalType.SmallDog, false); // Oddaj psa
             MainHerd[AnimalType.SmallDog]++;
+            OnGameMessage?.Invoke("🦊 Lis zaatakował! Mały pies poświęca się, ale stado ocalało.");
         }
         else
         {
-            MainHerd[AnimalType.Rabbit] += CurrentPlayer.Rabbits;
-            CurrentPlayer.Rabbits = 0;
+            int rabbits = CurrentPlayer.Rabbits;
+            if (rabbits > 0)
+            {
+                MainHerd[AnimalType.Rabbit] += rabbits;
+                CurrentPlayer.Rabbits = 0;
+                OnGameMessage?.Invoke($"🦊 Lis zaatakował! Straciłeś {rabbits} królików.");
+            }
         }
     }
 
@@ -51,55 +82,80 @@ public class GameEngine
     {
         if (CurrentPlayer.HasBigDog)
         {
-            CurrentPlayer.HasBigDog = false;
+            ModifyPlayerStock(AnimalType.BigDog, false);
             MainHerd[AnimalType.BigDog]++;
+            OnGameMessage?.Invoke("🐺 Wilk zaatakował! Duży pies broni stada.");
         }
         else
         {
-            MainHerd[AnimalType.Sheep] += CurrentPlayer.Sheep;
-            MainHerd[AnimalType.Pig] += CurrentPlayer.Pigs;
-            MainHerd[AnimalType.Cow] += CurrentPlayer.Cows;
-            CurrentPlayer.Sheep = 0;
-            CurrentPlayer.Pigs = 0;
-            CurrentPlayer.Cows = 0;
+            // LINQ: Lista typów, które zjada wilk
+            var edibleTypes = new[] { AnimalType.Sheep, AnimalType.Pig, AnimalType.Cow };
+            
+            bool ateSomething = false;
+            foreach (var type in edibleTypes)
+            {
+                int count = GetPlayerCount(type);
+                if (count > 0)
+                {
+                    MainHerd[type] += count;
+                    // Resetowanie licznika przy użyciu delegata 'Add' z wartością ujemną
+                    _playerInventoryMap[type].Add(CurrentPlayer, -count); 
+                    ateSomething = true;
+                }
+            }
+
+            if (ateSomething) 
+                OnGameMessage?.Invoke("🐺 Wilk zaatakował! Straciłeś owce, świnie i krowy.");
         }
     }
 
-    private (AnimalType Die1, AnimalType Die2) GetDiceResult()
+    private (AnimalType, AnimalType) GetDiceResult()
     {
-        AnimalType[] orangeDie = { 
-            AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit,
-            AnimalType.Sheep, AnimalType.Sheep, AnimalType.Pig, AnimalType.Horse, AnimalType.Fox 
-        };
-        AnimalType[] blueDie = { 
-            AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit, AnimalType.Rabbit,
-            AnimalType.Sheep, AnimalType.Sheep, AnimalType.Pig, AnimalType.Pig, AnimalType.Cow, AnimalType.Wolf 
-        };
+        // Definicja kości (mogłaby być polem klasy, ale tu dla czytelności)
+        var orangeDie = Enumerable.Repeat(AnimalType.Rabbit, 6)
+            .Concat(Enumerable.Repeat(AnimalType.Sheep, 2))
+            .Concat(new[] { AnimalType.Pig, AnimalType.Horse, AnimalType.Fox })
+            .ToArray();
+
+        var blueDie = Enumerable.Repeat(AnimalType.Rabbit, 6)
+            .Concat(Enumerable.Repeat(AnimalType.Sheep, 2))
+            .Concat(Enumerable.Repeat(AnimalType.Pig, 2))
+            .Concat(new[] { AnimalType.Cow, AnimalType.Wolf })
+            .ToArray();
 
         return (orangeDie[_random.Next(orangeDie.Length)], blueDie[_random.Next(blueDie.Length)]);
     }
 
-    public void ApplyGrowth(AnimalType die1, AnimalType die2)
+    public void ApplyGrowth(AnimalType[] dice)
     {
-        UpdateAnimal(AnimalType.Rabbit, (die1 == AnimalType.Rabbit ? 1 : 0) + (die2 == AnimalType.Rabbit ? 1 : 0));
-        UpdateAnimal(AnimalType.Sheep, (die1 == AnimalType.Sheep ? 1 : 0) + (die2 == AnimalType.Sheep ? 1 : 0));
-        UpdateAnimal(AnimalType.Pig, (die1 == AnimalType.Pig ? 1 : 0) + (die2 == AnimalType.Pig ? 1 : 0));
-        UpdateAnimal(AnimalType.Cow, (die1 == AnimalType.Cow ? 1 : 0) + (die2 == AnimalType.Cow ? 1 : 0));
-        UpdateAnimal(AnimalType.Horse, (die1 == AnimalType.Horse ? 1 : 0) + (die2 == AnimalType.Horse ? 1 : 0));
+        // LINQ: Filtrujemy tylko zwierzęta hodowlane (bez psów i drapieżników), które można rozmnażać
+        var breedableTypes = _playerInventoryMap.Keys
+            .Where(k => k != AnimalType.SmallDog && k != AnimalType.BigDog)
+            .ToList();
+
+        foreach (var type in breedableTypes)
+        {
+            // LINQ: Policz ile razy dany typ wypadł na kościach
+            int rolledCount = dice.Count(d => d == type);
+            if (rolledCount > 0)
+            {
+                int owned = GetPlayerCount(type);
+                int babies = (owned + rolledCount) / 2;
+                
+                if (babies > 0)
+                {
+                    int available = Math.Min(babies, MainHerd[type]);
+                    if (available > 0)
+                    {
+                        ModifyPlayerStock(type, available);
+                        MainHerd[type] -= available;
+                        OnGameMessage?.Invoke($"Urodziło się: {available}x {type}");
+                    }
+                }
+            }
+        }
     }
 
-    private void UpdateAnimal(AnimalType type, int rolledCount)
-    {
-        if (rolledCount == 0) return;
-        int owned = GetPlayerCount(type);
-        int babies = (owned + rolledCount) / 2;
-        
-        int available = Math.Min(babies, MainHerd[type]);
-        AddAnimalToPlayer(type, available);
-        MainHerd[type] -= available;
-    }
-
-    // --- NOWA LOGIKA WYMIANY ---
     public void Exchange(AnimalType from, AnimalType to)
     {
         int fromVal = GetAnimalValue(from);
@@ -107,76 +163,59 @@ public class GameEngine
 
         if (fromVal == 0 || toVal == 0) return;
 
-        // Wymiana "w górę" (np. 6 królików -> 1 owca)
-        if (fromVal < toVal)
+        // Logika wymiany (bez zmian w matematyce, ale z użyciem helperów)
+        if (fromVal < toVal) // W górę
         {
             int cost = toVal / fromVal;
             if (GetPlayerCount(from) >= cost && MainHerd[to] > 0)
             {
-                RemoveAnimal(from, cost);
-                AddAnimalToPlayer(to, 1);
+                ModifyPlayerStock(from, -cost); // Odejmij
+                ModifyPlayerStock(to, 1);       // Dodaj (lub ustaw psa)
                 MainHerd[from] += cost;
                 MainHerd[to] -= 1;
+                OnGameMessage?.Invoke($"Wymiana: {cost} {from} -> 1 {to}");
             }
         }
-        // Wymiana "w dół" (np. 1 owca -> 6 królików)
-        else
+        else // W dół
         {
             int yield = fromVal / toVal;
             if (GetPlayerCount(from) >= 1 && MainHerd[to] >= yield)
             {
-                RemoveAnimal(from, 1);
-                AddAnimalToPlayer(to, yield);
+                ModifyPlayerStock(from, -1);
+                ModifyPlayerStock(to, yield); // Tutaj uwaga: psy nie są wymieniane "w dół" w standardowych regułach w ten sposób, ale zachowuję Twoją logikę
                 MainHerd[from] += 1;
                 MainHerd[to] -= yield;
+                OnGameMessage?.Invoke($"Wymiana: 1 {from} -> {yield} {to}");
             }
         }
     }
 
-    private int GetAnimalValue(AnimalType type) => type switch
+    // Helpery wykorzystujące słowniki zamiast switchy
+    private int GetAnimalValue(AnimalType type) => _animalValues.GetValueOrDefault(type, 0);
+
+    private int GetPlayerCount(AnimalType type) => 
+        _playerInventoryMap.TryGetValue(type, out var funcs) ? funcs.Get(CurrentPlayer) : 0;
+
+    // Uniwersalna metoda modyfikacji stanu (obsługuje int i bool dla psów)
+    private void ModifyPlayerStock(AnimalType type, object value)
     {
-        AnimalType.Rabbit => 1,
-        AnimalType.Sheep => 6,
-        AnimalType.SmallDog => 6,
-        AnimalType.Pig => 12,
-        AnimalType.Cow => 36,
-        AnimalType.BigDog => 36,
-        AnimalType.Horse => 72,
-        _ => 0
-    };
+        if (!_playerInventoryMap.TryGetValue(type, out var funcs)) return;
 
-    private int GetPlayerCount(AnimalType type) => type switch {
-        AnimalType.Rabbit => CurrentPlayer.Rabbits,
-        AnimalType.Sheep => CurrentPlayer.Sheep,
-        AnimalType.Pig => CurrentPlayer.Pigs,
-        AnimalType.Cow => CurrentPlayer.Cows,
-        AnimalType.Horse => CurrentPlayer.Horses,
-        AnimalType.SmallDog => CurrentPlayer.HasSmallDog ? 1 : 0,
-        AnimalType.BigDog => CurrentPlayer.HasBigDog ? 1 : 0,
-        _ => 0
-    };
-
-    private void AddAnimalToPlayer(AnimalType type, int count) {
-        switch (type) {
-            case AnimalType.Rabbit: CurrentPlayer.Rabbits += count; break;
-            case AnimalType.Sheep: CurrentPlayer.Sheep += count; break;
-            case AnimalType.Pig: CurrentPlayer.Pigs += count; break;
-            case AnimalType.Cow: CurrentPlayer.Cows += count; break;
-            case AnimalType.Horse: CurrentPlayer.Horses += count; break;
-            case AnimalType.SmallDog: CurrentPlayer.HasSmallDog = true; break;
-            case AnimalType.BigDog: CurrentPlayer.HasBigDog = true; break;
+        if (value is int intVal)
+        {
+            // Jeśli to pies i intVal > 0, to traktujemy jako ustawienie flagi true
+            if (type == AnimalType.SmallDog || type == AnimalType.BigDog)
+            {
+                if (intVal != 0) funcs.SetDog(CurrentPlayer, intVal > 0);
+            }
+            else
+            {
+                funcs.Add(CurrentPlayer, intVal);
+            }
         }
-    }
-
-    private void RemoveAnimal(AnimalType type, int count) {
-        switch (type) {
-            case AnimalType.Rabbit: CurrentPlayer.Rabbits -= count; break;
-            case AnimalType.Sheep: CurrentPlayer.Sheep -= count; break;
-            case AnimalType.Pig: CurrentPlayer.Pigs -= count; break;
-            case AnimalType.Cow: CurrentPlayer.Cows -= count; break;
-            case AnimalType.Horse: CurrentPlayer.Horses -= count; break;
-            case AnimalType.SmallDog: CurrentPlayer.HasSmallDog = false; break;
-            case AnimalType.BigDog: CurrentPlayer.HasBigDog = false; break;
+        else if (value is bool boolVal)
+        {
+            funcs.SetDog(CurrentPlayer, boolVal);
         }
     }
 }

@@ -2,6 +2,7 @@
 @using BlazorApp1.Logic
 @using BlazorApp1.Models
 @inject GameEngine Engine 
+@implements IDisposable
 @rendermode InteractiveServer
 
 <PageTitle>Super Farmer</PageTitle>
@@ -13,93 +14,118 @@
 
 <h1>Twoja Farma</h1>
 
-<div class="d-flex gap-4">
-    <div class="card p-3 shadow-sm">
-        <h3>Twoje Stado</h3>
-        <p>🐰 Króliki: <strong>@Engine.CurrentPlayer.Rabbits</strong> <small class="text-muted">(Bank: @Engine.MainHerd[AnimalType.Rabbit])</small></p>
-        <p>🐑 Owce: <strong>@Engine.CurrentPlayer.Sheep</strong> <small class="text-muted">(Bank: @Engine.MainHerd[AnimalType.Sheep])</small></p>
-        <p>🐷 Świnie: <strong>@Engine.CurrentPlayer.Pigs</strong></p>
-        <p>🐮 Krowy: <strong>@Engine.CurrentPlayer.Cows</strong></p>
-        <p>🐴 Konie: <strong>@Engine.CurrentPlayer.Horses</strong></p>
-        <hr />
-        <p>🐕 Mały Pies: @(Engine.CurrentPlayer.HasSmallDog ? "✅" : "❌")</p>
-        <p>🐩 Duży Pies: @(Engine.CurrentPlayer.HasBigDog ? "✅" : "❌")</p>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 shadow-sm h-100">
+            <h3>Twoje Stado</h3>
+            <div class="d-flex justify-content-between flex-wrap">
+                <span class="m-1 p-2 bg-light rounded border">🐰 Króliki: <strong>@Engine.CurrentPlayer.Rabbits</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Rabbit])</small></span>
+                <span class="m-1 p-2 bg-light rounded border">🐑 Owce: <strong>@Engine.CurrentPlayer.Sheep</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Sheep])</small></span>
+                <span class="m-1 p-2 bg-light rounded border">🐷 Świnie: <strong>@Engine.CurrentPlayer.Pigs</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Pig])</small></span>
+                <span class="m-1 p-2 bg-light rounded border">🐮 Krowy: <strong>@Engine.CurrentPlayer.Cows</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Cow])</small></span>
+                <span class="m-1 p-2 bg-light rounded border">🐴 Konie: <strong>@Engine.CurrentPlayer.Horses</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Horse])</small></span>
+            </div>
+            <hr />
+            <div class="d-flex gap-3">
+                <span>🐕 Mały Pies: @(Engine.CurrentPlayer.HasSmallDog ? "✅" : "❌")</span>
+                <span>🐩 Duży Pies: @(Engine.CurrentPlayer.HasBigDog ? "✅" : "❌")</span>
+            </div>
+        </div>
     </div>
 
-    <div class="card p-3 shadow-sm text-center">
-        <h3>Kostki</h3>
-        @if (Engine.LastRoll.HasValue)
-        {
-            <div class="display-3 my-3">
-                @GetIcon(Engine.LastRoll.Value.Die1) @GetIcon(Engine.LastRoll.Value.Die2)
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 shadow-sm h-100 text-center">
+            <h3>Kostki</h3>
+            @if (Engine.LastRoll.HasValue)
+            {
+                <div class="display-3 my-2">
+                    @GetIcon(Engine.LastRoll.Value.Die1) @GetIcon(Engine.LastRoll.Value.Die2)
+                </div>
+            }
+            else
+            {
+                <div class="display-3 my-2 text-muted">🎲🎲</div>
+            }
+            <button class="btn btn-primary btn-lg mb-3" @onclick="HandleRoll">Rzuć kośćmi</button>
+            
+            <div class="text-start border rounded p-2 bg-light" style="max-height: 100px; overflow-y: auto; font-size: 0.9em;">
+                <strong>Ostatnie zdarzenia:</strong>
+                <ul class="list-unstyled m-0">
+                    @foreach (var log in _gameLogs.Take(3))
+                    {
+                        <li>@log</li>
+                    }
+                </ul>
             </div>
-        }
-        else
-        {
-            <div class="display-3 my-3 text-muted">🎲🎲</div>
-        }
-        <button class="btn btn-primary btn-lg" @onclick="HandleRoll">Rzuć kośćmi</button>
+        </div>
     </div>
 </div>
 
-<div class="mt-4 card p-3 shadow-sm">
+<div class="mt-2 card p-3 shadow-sm">
     <h3>Targ (Wymiana)</h3>
     <div class="row">
         <div class="col-md-4">
             <h5>Wymień "w górę"</h5>
             <div class="d-grid gap-2">
-                <button class="btn btn-outline-primary text-start" @onclick='() => Engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep)'>
-                    6x 🐰 ➔ 1x 🐑
-                </button>
-                <button class="btn btn-outline-primary text-start" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Pig)'>
-                    2x 🐑 ➔ 1x 🐷
-                </button>
-                <button class="btn btn-outline-primary text-start" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Cow)'>
-                    3x 🐷 ➔ 1x 🐮
-                </button>
-                <button class="btn btn-outline-primary text-start" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Horse)'>
-                    2x 🐮 ➔ 1x 🐴
-                </button>
+                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep)'>6x 🐰 ➔ 1x 🐑</button>
+                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Pig)'>2x 🐑 ➔ 1x 🐷</button>
+                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Cow)'>3x 🐷 ➔ 1x 🐮</button>
+                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Horse)'>2x 🐮 ➔ 1x 🐴</button>
             </div>
         </div>
 
         <div class="col-md-4">
             <h5>Wymień "w dół"</h5>
             <div class="d-grid gap-2">
-                <button class="btn btn-outline-info text-start" @onclick='() => Engine.Exchange(AnimalType.Horse, AnimalType.Cow)'>
-                    1x 🐴 ➔ 2x 🐮
-                </button>
-                <button class="btn btn-outline-info text-start" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Pig)'>
-                    1x 🐮 ➔ 3x 🐷
-                </button>
-                <button class="btn btn-outline-info text-start" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Sheep)'>
-                    1x 🐷 ➔ 2x 🐑
-                </button>
-                <button class="btn btn-outline-info text-start" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Rabbit)'>
-                    1x 🐑 ➔ 6x 🐰
-                </button>
+                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Horse, AnimalType.Cow)'>1x 🐴 ➔ 2x 🐮</button>
+                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Pig)'>1x 🐮 ➔ 3x 🐷</button>
+                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Sheep)'>1x 🐷 ➔ 2x 🐑</button>
+                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Rabbit)'>1x 🐑 ➔ 6x 🐰</button>
             </div>
         </div>
 
         <div class="col-md-4">
             <h5>Kup ochronę</h5>
             <div class="d-grid gap-2">
-                <button class="btn btn-outline-warning text-start" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog)'>
-                    1x 🐑 ➔ Mały Pies 🐕
-                </button>
-                <button class="btn btn-outline-danger text-start" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.BigDog)'>
-                    1x 🐮 ➔ Duży Pies 🐩
-                </button>
+                <button class="btn btn-outline-warning text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog)'>1x 🐑 ➔ Mały Pies 🐕</button>
+                <button class="btn btn-outline-danger text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.BigDog)'>1x 🐮 ➔ Duży Pies 🐩</button>
             </div>
         </div>
     </div>
 </div>
+
 @code {
-    private void HandleRoll() => Engine.RollDice();
+    private List<string> _gameLogs = new();
+
+    protected override void OnInitialized()
+    {
+        // Subskrypcja delegata
+        Engine.OnGameMessage += HandleGameMessage;
+    }
+
+    private void HandleGameMessage(string message)
+    {
+        _gameLogs.Insert(0, $"{DateTime.Now.ToString("HH:mm:ss")}: {message}");
+    }
+
+    private void HandleRoll() 
+    {
+        Engine.RollDice();
+        // StateHasChanged nie jest tu konieczne w trybie InteractiveServer dla zdarzeń UI, 
+        // ale delegat OnGameMessage wywoływany wewnątrz silnika nie odświeża widoku automatycznie,
+        // więc normalnie wymagalibyśmy InvokeAsync(StateHasChanged) wewnątrz HandleGameMessage,
+        // jednak tutaj wywołujemy RollDice z przycisku, więc Blazor i tak przerysuje widok.
+    }
 
     private string GetIcon(AnimalType type) => type switch {
         AnimalType.Rabbit => "🐰", AnimalType.Sheep => "🐑", AnimalType.Pig => "🐷",
         AnimalType.Cow => "🐮", AnimalType.Horse => "🐴", AnimalType.Fox => "🦊",
         AnimalType.Wolf => "🐺", _ => "❓"
     };
+
+    public void Dispose()
+    {
+        // Sprzątanie subskrypcji delegata, aby uniknąć wycieków pamięci
+        Engine.OnGameMessage -= HandleGameMessage;
+    }
 }
