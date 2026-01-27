@@ -10,6 +10,4 @@ public class Player
     public bool HasSmallDog { get; set; }
     public bool HasBigDog { get; set; }
 
-    public bool HasWon() => 
-        Rabbits > 0 && Sheep > 0 && Pigs > 0 && Cows > 0 && Horses > 0;
 }
