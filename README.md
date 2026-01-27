@@ -1,29 +1,40 @@
-Opis projektu
-Projekt stanowi cyfrową implementację klasycznej gry planszowej Super Farmer, stworzoną jako aplikacja webowa w technologii .NET. Gra pozwala na rywalizację gracza z inteligentnym botem w systemie turowym, odwzorowując matematyczne zasady przyrostu stada oraz mechanikę handlu zwierzętami.
+# Super Farmer - Blazor Edition
 
-Architektura techniczna
-Aplikacja została zbudowana z wykorzystaniem nowoczesnych wzorców programowania w C#:
+Digital implementation of the classic board game "Super Farmer" originally designed by Karol Borsuk. This project is a web-based application allowing users to play against an automated bot opponent while adhering to the original mathematical rules of animal husbandry.
 
-Blazor InteractiveServer: Zapewnia dynamiczne odświeżanie interfejsu użytkownika bez przeładowywania strony.
+## Table of contents
+* [General info](#general-info)
+* [Technologies](#technologies)
+* [Setup](#setup)
+* [Features](#features)
+* [Game Logic](#game-logic)
+* [Sources](#sources)
 
-GameEngine: Scentralizowany silnik gry zarządzający logiką rzutów, atakami drapieżników oraz stanem magazynu głównego (MainHerd).
+## General info
+The goal of the project was to create a functional, turn-based version of the Super Farmer game using modern web technologies. The application showcases the implementation of complex game logic, resource management, and a strategic bot (FarmerBot) that mimics human decision-making processes in trading and risk management.
 
-Delegatowe mapowanie zasobów: Wykorzystanie słowników z wyrażeniami lambda (Func/Action) do bezstanowego zarządzania inwentarzem graczy, co eliminuje rozbudowane instrukcje warunkowe.
+## Technologies
+Project is created with:
+* .NET 9.0
+* Blazor InteractiveServer
+* C# 12
+* Bootstrap 5.0
+* CSS3
 
-Asynchroniczny system turowy: Implementacja logiki bota przy użyciu Task.Delay oraz programowania asynchronicznego, co pozwala na płynną wizualizację ruchów komputera.
+## Setup
+To run this project locally, you need to have the .NET SDK installed.
 
-Funkcjonalności
-FarmerBot AI: Automatyczny przeciwnik realizujący wielopoziomową strategię handlową, dążący do optymalizacji składu stada i zakupu konia.
+1. Clone the repository:
+```bash
+git clone [https://github.com/Jandi3258/SuperFarmer.git](https://github.com/Jandi3258/SuperFarmer.git)
+```
 
-System drapieżników: Pełna obsługa zdarzeń losowych (Lis i Wilk) wraz z systemem ochrony stada przez małe i duże psy.
+2. Navigate to the project directory:
+```cd SuperFarmer```
 
-Dynamiczny rynek: Moduł wymiany zwierząt zgodny z oficjalną tabelą wartości (np. 6 królików za 1 owcę).
+3. Restore dependencies and run the application:
+```dotnet run```
 
-Zarządzanie zasobami: System limitowanego stada głównego – gracze mogą otrzymać tylko tyle zwierząt, ile aktualnie znajduje się w magazynie.
+4. Open your browser and go to http://localhost:5000 (or the port specified in the console).
 
-Stack technologiczny
-Język: C#
 
-Framework: .NET Core / Blazor
-
-Interfejs: HTML / CSS (Bootstrap)
