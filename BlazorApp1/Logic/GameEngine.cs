@@ -8,7 +8,7 @@ public class GameEngine
     // Gracze
     public Player HumanPlayer { get; } = new Player();
     public Player BotPlayer { get; } = new Player();
-    public Player CurrentPlayer { get; private set; } // Wskazuje na aktualnego gracza
+    public Player CurrentPlayer { get; private set; } 
 
     // Stan gry
     public Dictionary<AnimalType, int> MainHerd { get; private set; }
@@ -26,14 +26,12 @@ public class GameEngine
         { AnimalType.Rabbit, 1 }, { AnimalType.Sheep, 6 }, { AnimalType.Pig, 12 },
         { AnimalType.Cow, 36 }, { AnimalType.Horse, 72 }, { AnimalType.SmallDog, 6 }, { AnimalType.BigDog, 36 }
     };
-
-    // --- JEDYNY POPRAWNY KONSTRUKTOR ---
+    
     public GameEngine()
     {
-        // 1. Ustawienie pierwszego gracza
         CurrentPlayer = HumanPlayer; 
 
-        // 2. Inicjalizacja stada głównego
+        
         MainHerd = new Dictionary<AnimalType, int>
         {
             { AnimalType.Rabbit, 60 }, { AnimalType.Sheep, 24 }, { AnimalType.Pig, 20 },
@@ -41,7 +39,7 @@ public class GameEngine
             { AnimalType.SmallDog, 4 }, { AnimalType.BigDog, 2 }
         };
 
-        // 3. Inicjalizacja mapowania akcji (Delegaty)
+        //Delegaty
         _playerInventoryMap = new()
         {
             { AnimalType.Rabbit, (p => p.Rabbits, (p, v) => p.Rabbits += v, (_, _) => { }) },
@@ -53,8 +51,7 @@ public class GameEngine
             { AnimalType.BigDog, (p => (p.HasBigDog ? 1 : 0), (_, _) => { }, (p, v) => p.HasBigDog = v) }
         };
     }
-
-    // Mechanika zmiany tury
+    
     public void EndTurn()
     {
         CurrentPlayer = (CurrentPlayer == HumanPlayer) ? BotPlayer : HumanPlayer;
