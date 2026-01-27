@@ -8,10 +8,23 @@ public class FarmerBot
     {
         Player me = engine.BotPlayer;
 
-        // Bot handluje tylko jeśli jest w stanie coś zyskać
-        if (me.Rabbits >= 6 && engine.MainHerd[AnimalType.Sheep] > 0)
+        if (me.Cows >= 2 && me.Horses == 0 && engine.MainHerd[AnimalType.Horse] > 0)
         {
-            engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep);
+            engine.Exchange(AnimalType.Cow, AnimalType.Horse);
+        }
+        if (me.Cows >= 1 && !me.HasBigDog && engine.MainHerd[AnimalType.BigDog] > 0)
+        {
+            engine.Exchange(AnimalType.Cow, AnimalType.BigDog);
+        }
+
+        if (me.Pigs >= 3 && engine.MainHerd[AnimalType.Cow] > 0)
+        {
+            engine.Exchange(AnimalType.Pig, AnimalType.Cow);
+        }
+
+        if (me.Sheep >= 1 && !me.HasSmallDog && engine.MainHerd[AnimalType.SmallDog] > 0)
+        {
+            engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog);
         }
 
         if (me.Sheep >= 2 && engine.MainHerd[AnimalType.Pig] > 0)
@@ -19,10 +32,14 @@ public class FarmerBot
             engine.Exchange(AnimalType.Sheep, AnimalType.Pig);
         }
 
-        // Kupno psa dla ochrony
-        if (me.Sheep >= 1 && !me.HasSmallDog && engine.MainHerd[AnimalType.SmallDog] > 0)
+        if (me.Rabbits >= 6 && engine.MainHerd[AnimalType.Sheep] > 0)
         {
-            engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog);
+            engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep);
+        }
+        
+        if (me.Horses > 1)
+        {
+            engine.Exchange(AnimalType.Horse, AnimalType.Cow);
         }
     }
 }
