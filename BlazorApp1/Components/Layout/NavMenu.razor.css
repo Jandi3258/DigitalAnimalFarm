@@ -89,16 +89,25 @@
     display: block;
 }
 
+.nav-item ::deep a {
+    padding-left: 1.5rem !important; 
+    display: flex;
+    align-items: center;
+}
+
+.nav-item ::deep .bi {
+    margin-right: 0.8rem;
+    flex-shrink: 0; 
+}
+
 @media (min-width: 641px) {
     .navbar-toggler {
         display: none;
     }
 
     .nav-scrollable {
-        /* Never collapse the sidebar for wide screens */
         display: block;
 
-        /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
     }
