@@ -30,11 +30,15 @@ git clone [https://github.com/Jandi3258/SuperFarmer.git](https://github.com/Jand
 ```
 
 2. Navigate to the project directory:
-```cd SuperFarmer```
+```
+cd SuperFarmer
+```
 
-3. Restore dependencies and run the application:
-```dotnet run```
+4. Restore dependencies and run the application:
+```
+dotnet run
+```
 
-4. Open your browser and go to http://localhost:5000 (or the port specified in the console).
+6. Open your browser and go to http://localhost:5000 (or the port specified in the console).
 
 
