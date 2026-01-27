@@ -9,6 +9,8 @@ builder.Services.AddRazorComponents()
 
 //builder.Services.AddSingleton<BlazorApp1.Logic.GameEngine>();
 builder.Services.AddScoped<GameEngine>();
+// To pozwala na używanie @inject GameEngine Engine w plikach .razor
+builder.Services.AddScoped<GameEngine>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

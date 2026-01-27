@@ -1,131 +1,175 @@
 ﻿@page "/"
 @using BlazorApp1.Logic
 @using BlazorApp1.Models
-@inject GameEngine Engine 
-@implements IDisposable
+@inject GameEngine Engine
 @rendermode InteractiveServer
 
 <PageTitle>Super Farmer</PageTitle>
 
-@if (Engine.CurrentPlayer.HasWon())
+@if (Engine.HumanPlayer.Rabbits > 0 && Engine.HumanPlayer.Sheep > 0 && Engine.HumanPlayer.Pigs > 0 && Engine.HumanPlayer.Cows > 0 && Engine.HumanPlayer.Horses > 0)
 {
-    <div class="alert alert-success">🏆 Gratulacje! Zostałeś Super Farmerem!</div>
+    <div class="alert alert-success shadow">🏆 Gratulacje! Zostałeś Super Farmerem!</div>
 }
-
-<h1>Twoja Farma</h1>
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <div class="card p-3 shadow-sm h-100">
-            <h3>Twoje Stado</h3>
-            <div class="d-flex justify-content-between flex-wrap">
-                <span class="m-1 p-2 bg-light rounded border">🐰 Króliki: <strong>@Engine.CurrentPlayer.Rabbits</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Rabbit])</small></span>
-                <span class="m-1 p-2 bg-light rounded border">🐑 Owce: <strong>@Engine.CurrentPlayer.Sheep</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Sheep])</small></span>
-                <span class="m-1 p-2 bg-light rounded border">🐷 Świnie: <strong>@Engine.CurrentPlayer.Pigs</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Pig])</small></span>
-                <span class="m-1 p-2 bg-light rounded border">🐮 Krowy: <strong>@Engine.CurrentPlayer.Cows</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Cow])</small></span>
-                <span class="m-1 p-2 bg-light rounded border">🐴 Konie: <strong>@Engine.CurrentPlayer.Horses</strong> <small class="text-muted">(@Engine.MainHerd[AnimalType.Horse])</small></span>
-            </div>
-            <hr />
-            <div class="d-flex gap-3">
-                <span>🐕 Mały Pies: @(Engine.CurrentPlayer.HasSmallDog ? "✅" : "❌")</span>
-                <span>🐩 Duży Pies: @(Engine.CurrentPlayer.HasBigDog ? "✅" : "❌")</span>
-            </div>
+        <div class="card p-3 @(Engine.CurrentPlayer == Engine.HumanPlayer ? "border-primary shadow" : "opacity-75")">
+            <h3 class="d-flex justify-content-between">
+                Twoje Stado 
+                @if(Engine.CurrentPlayer == Engine.HumanPlayer) { <span class="badge bg-primary">Twoja Tura ◀️</span> }
+            </h3>
+            @RenderStado(Engine.HumanPlayer)
         </div>
     </div>
 
     <div class="col-md-6 mb-3">
-        <div class="card p-3 shadow-sm h-100 text-center">
-            <h3>Kostki</h3>
-            @if (Engine.LastRoll.HasValue)
-            {
-                <div class="display-3 my-2">
-                    @GetIcon(Engine.LastRoll.Value.Die1) @GetIcon(Engine.LastRoll.Value.Die2)
-                </div>
-            }
-            else
-            {
-                <div class="display-3 my-2 text-muted">🎲🎲</div>
-            }
-            <button class="btn btn-primary btn-lg mb-3" @onclick="HandleRoll">Rzuć kośćmi</button>
-            
-            <div class="text-start border rounded p-2 bg-light" style="max-height: 100px; overflow-y: auto; font-size: 0.9em;">
-                <strong>Ostatnie zdarzenia:</strong>
-                <ul class="list-unstyled m-0">
-                    @foreach (var log in _gameLogs.Take(3))
-                    {
-                        <li>@log</li>
-                    }
-                </ul>
-            </div>
+        <div class="card p-3 @(Engine.CurrentPlayer == Engine.BotPlayer ? "border-danger shadow" : "opacity-75")">
+            <h3 class="d-flex justify-content-between">
+                Stado Bota
+                @if(Engine.CurrentPlayer == Engine.BotPlayer) { <span class="badge bg-danger">Tura Bota ◀️</span> }
+            </h3>
+            @RenderStado(Engine.BotPlayer)
         </div>
     </div>
 </div>
-
-<div class="mt-2 card p-3 shadow-sm">
-    <h3>Targ (Wymiana)</h3>
-    <div class="row">
-        <div class="col-md-4">
-            <h5>Wymień "w górę"</h5>
-            <div class="d-grid gap-2">
-                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep)'>6x 🐰 ➔ 1x 🐑</button>
-                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Pig)'>2x 🐑 ➔ 1x 🐷</button>
-                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Cow)'>3x 🐷 ➔ 1x 🐮</button>
-                <button class="btn btn-outline-primary text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Horse)'>2x 🐮 ➔ 1x 🐴</button>
+<div class="text-center my-3">
+    @if (Engine.LastRoll.HasValue)
+    {
+        <div class="card d-inline-block p-3 shadow-sm bg-white">
+            <h4 class="text-muted small">Wynik rzutu:</h4>
+            <div class="display-4">
+                @GetIcon(Engine.LastRoll.Value.Die1) @GetIcon(Engine.LastRoll.Value.Die2)
             </div>
         </div>
+    }
+    else
+    {
+        <div class="display-4 text-muted">🎲🎲</div>
+    }
+</div>
 
-        <div class="col-md-4">
-            <h5>Wymień "w dół"</h5>
-            <div class="d-grid gap-2">
-                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Horse, AnimalType.Cow)'>1x 🐴 ➔ 2x 🐮</button>
-                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Pig)'>1x 🐮 ➔ 3x 🐷</button>
-                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Sheep)'>1x 🐷 ➔ 2x 🐑</button>
-                <button class="btn btn-outline-info text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Rabbit)'>1x 🐑 ➔ 6x 🐰</button>
+<div class="text-center my-4">
+    @if (Engine.CurrentPlayer == Engine.HumanPlayer)
+    {
+        <button class="btn btn-primary btn-lg px-5 shadow" @onclick="HandleHumanMove">Rzuć kośćmi</button>
+    }
+    else
+    {
+        <button class="btn btn-danger btn-lg px-5 shadow" @onclick="HandleBotMove">Bot wykonuje ruch...</button>
+    }
+</div>
+
+@if (Engine.CurrentPlayer == Engine.HumanPlayer)
+{
+    <div class="mt-4 card p-3 shadow-sm border-primary">
+        <h3 class="text-primary">Targ (Twoja Wymiana)</h3>
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h6>W górę</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" @onclick='() => Engine.Exchange(AnimalType.Rabbit, AnimalType.Sheep)'>6x 🐰 ➔ 1x 🐑</button>
+                    <button class="btn btn-outline-primary btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Pig)'>2x 🐑 ➔ 1x 🐷</button>
+                    <button class="btn btn-outline-primary btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Cow)'>3x 🐷 ➔ 1x 🐮</button>
+                    <button class="btn btn-outline-primary btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Horse)'>2x 🐮 ➔ 1x 🐴</button>
+                </div>
             </div>
-        </div>
-
-        <div class="col-md-4">
-            <h5>Kup ochronę</h5>
-            <div class="d-grid gap-2">
-                <button class="btn btn-outline-warning text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog)'>1x 🐑 ➔ Mały Pies 🐕</button>
-                <button class="btn btn-outline-danger text-start btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.BigDog)'>1x 🐮 ➔ Duży Pies 🐩</button>
+            <div class="col-md-4">
+                <h6>W dół</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-info btn-sm" @onclick='() => Engine.Exchange(AnimalType.Horse, AnimalType.Cow)'>1x 🐴 ➔ 2x 🐮</button>
+                    <button class="btn btn-outline-info btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.Pig)'>1x 🐮 ➔ 3x 🐷</button>
+                    <button class="btn btn-outline-info btn-sm" @onclick='() => Engine.Exchange(AnimalType.Pig, AnimalType.Sheep)'>1x 🐷 ➔ 2x 🐑</button>
+                    <button class="btn btn-outline-info btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.Rabbit)'>1x 🐑 ➔ 6x 🐰</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h6>Ochrona</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-warning btn-sm" @onclick='() => Engine.Exchange(AnimalType.Sheep, AnimalType.SmallDog)'>1x 🐑 ➔ 🐕</button>
+                    <button class="btn btn-outline-danger btn-sm" @onclick='() => Engine.Exchange(AnimalType.Cow, AnimalType.BigDog)'>1x 🐮 ➔ 🐩</button>
+                </div>
             </div>
         </div>
     </div>
+}
+
+@* Logi gry *@
+<div class="card p-2 bg-light mt-3" style="max-height: 150px; overflow-y: auto;">
+    <h6>Ostatnie zdarzenia:</h6>
+    <ul class="list-unstyled small">
+        @foreach (var log in _gameLogs.Take(5))
+        {
+            <li>@log</li>
+        }
+    </ul>
 </div>
 
 @code {
+    private FarmerBot bot = new FarmerBot();
     private List<string> _gameLogs = new();
 
     protected override void OnInitialized()
     {
-        // Subskrypcja delegata
-        Engine.OnGameMessage += HandleGameMessage;
+        Engine.OnGameMessage += msg => {
+            _gameLogs.Insert(0, $"{DateTime.Now:HH:mm:ss}: {msg}");
+            InvokeAsync(StateHasChanged);
+        };
     }
 
-    private void HandleGameMessage(string message)
+    private async Task HandleHumanMove()
     {
-        _gameLogs.Insert(0, $"{DateTime.Now.ToString("HH:mm:ss")}: {message}");
-    }
-
-    private void HandleRoll() 
-    {
+        
         Engine.RollDice();
-        // StateHasChanged nie jest tu konieczne w trybie InteractiveServer dla zdarzeń UI, 
-        // ale delegat OnGameMessage wywoływany wewnątrz silnika nie odświeża widoku automatycznie,
-        // więc normalnie wymagalibyśmy InvokeAsync(StateHasChanged) wewnątrz HandleGameMessage,
-        // jednak tutaj wywołujemy RollDice z przycisku, więc Blazor i tak przerysuje widok.
+        StateHasChanged(); 
+
+        await Task.Delay(1000); 
+
+        Engine.EndTurn();
+        StateHasChanged();
+
+        await HandleBotMove();
     }
 
+    private async Task HandleBotMove()
+    {
+        if (Engine.CurrentPlayer != Engine.BotPlayer) return;
+        // Bot myśli i handluje
+        bot.ExecuteBestTrades(Engine);
+        StateHasChanged();
+        await Task.Delay(800);
+        
+        // Bot rzuca
+        Engine.RollDice();
+        StateHasChanged();
+        
+        await Task.Delay(1500);
+
+        Engine.EndTurn();
+        StateHasChanged();
+    }
+    
     private string GetIcon(AnimalType type) => type switch {
-        AnimalType.Rabbit => "🐰", AnimalType.Sheep => "🐑", AnimalType.Pig => "🐷",
-        AnimalType.Cow => "🐮", AnimalType.Horse => "🐴", AnimalType.Fox => "🦊",
-        AnimalType.Wolf => "🐺", _ => "❓"
+        AnimalType.Rabbit => "🐰", 
+        AnimalType.Sheep => "🐑", 
+        AnimalType.Pig => "🐷",
+        AnimalType.Cow => "🐮", 
+        AnimalType.Horse => "🐴", 
+        AnimalType.Fox => "🦊",
+        AnimalType.Wolf => "🐺", 
+        _ => "❓"
     };
 
-    public void Dispose()
-    {
-        // Sprzątanie subskrypcji delegata, aby uniknąć wycieków pamięci
-        Engine.OnGameMessage -= HandleGameMessage;
-    }
+    // Funkcja pomocnicza do renderowania stada
+    private RenderFragment RenderStado(Player p) => __builder => {
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            <div class="p-2 border rounded bg-white">🐰 Króliki: <strong>@p.Rabbits</strong></div>
+            <div class="p-2 border rounded bg-white">🐑 Owce: <strong>@p.Sheep</strong></div>
+            <div class="p-2 border rounded bg-white">🐷 Świnie: <strong>@p.Pigs</strong></div>
+            <div class="p-2 border rounded bg-white">🐮 Krowy: <strong>@p.Cows</strong></div>
+            <div class="p-2 border rounded bg-white">🐴 Konie: <strong>@p.Horses</strong></div>
+        </div>
+        <div class="mt-3 small text-muted">
+            Ochrona: 🐕 Mały: @(p.HasSmallDog ? "✅" : "❌") | 🐩 Duży: @(p.HasBigDog ? "✅" : "❌")
+        </div>
+    };
 }
