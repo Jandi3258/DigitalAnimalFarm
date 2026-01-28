@@ -1,6 +1,6 @@
-# Super Farmer - Blazor Edition
+# Digital Animal Farm - Blazor Edition
 
-Digital implementation of the classic board game "Super Farmer" originally designed by Karol Borsuk. This project is a web-based application allowing users to play against an automated bot opponent while adhering to the original mathematical rules of animal husbandry.
+Digital implementation of the Animal farm. This project is a web-based application allowing users to play against an automated bot opponent while adhering to the original mathematical rules of animal husbandry.
 
 ## Table of contents
 * [General info](#general-info)
@@ -24,12 +24,12 @@ To run this project locally, you need to have the .NET SDK installed.
 
 1. Clone the repository:
 ```bash
-git clone [https://github.com/Jandi3258/SuperFarmer.git](https://github.com/Jandi3258/SuperFarmer.git)
+git clone [https://github.com/Jandi3258/SuperFarmer.git](https://github.com/Jandi3258/DigitalAnimalFarm.git)
 ```
 
 2. Navigate to the project directory:
 ```
-cd SuperFarmer
+cd DigitalAnimalFarm
 ```
 
 4. Restore dependencies and run the application:
