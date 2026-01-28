@@ -24,7 +24,7 @@ To run this project locally, you need to have the .NET SDK installed.
 
 1. Clone the repository:
 ```bash
-git clone [https://github.com/Jandi3258/SuperFarmer.git](https://github.com/Jandi3258/DigitalAnimalFarm.git)
+git clone (https://github.com/Jandi3258/DigitalAnimalFarm.git)
 ```
 
 2. Navigate to the project directory:
