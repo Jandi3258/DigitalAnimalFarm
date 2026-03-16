@@ -9,7 +9,7 @@ Digital implementation of the Animal farm. This project is a web-based applicati
 * [Game Logic](#game-logic)
 
 ## General info
-The goal of the project was to create a functional, turn-based version of the Super Farmer game using modern web technologies. The application showcases the implementation of complex game logic, resource management, and a strategic bot (FarmerBot) that mimics human decision-making processes in trading and risk management.
+The goal of the project was to create a functional, turn-based game using modern web technologies. The application showcases the implementation of complex game logic, resource management, and a strategic bot (FarmerBot) that mimics human decision-making processes in trading and risk management.
 
 ## Technologies
 Project is created with:
@@ -24,7 +24,7 @@ To run this project locally, you need to have the .NET SDK installed.
 
 1. Clone the repository:
 ```bash
-git clone (https://github.com/Jandi3258/DigitalAnimalFarm.git)
+git clone https://github.com/Jandi3258/DigitalAnimalFarm.git
 ```
 
 2. Navigate to the project directory:
