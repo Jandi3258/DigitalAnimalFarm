@@ -11,6 +11,11 @@
     <div class="alert alert-success shadow">🏆 Gratulacje! Zostałeś Super Farmerem!</div>
 }
 
+@if (Engine.BotPlayer.Rabbits > 0 && Engine.BotPlayer.Sheep > 0 && Engine.BotPlayer.Pigs > 0 && Engine.BotPlayer.Cows > 0 && Engine.BotPlayer.Horses > 0)
+{
+    <div class="alert alert-danger shadow">🏆 Przegrałeś!!!</div>
+}
+
 <div class="row">
     <div class="col-md-6 mb-3">
         <div class="card p-3 @(Engine.CurrentPlayer == Engine.HumanPlayer ? "border-primary shadow" : "opacity-75")">
