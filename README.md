@@ -1,6 +1,9 @@
 # Digital Animal Farm - Blazor Edition
 
 Digital implementation of the Animal farm. This project is a web-based application allowing users to play against an automated bot opponent while adhering to the original mathematical rules of animal husbandry.
+## UI View
+
+![Wygląd aplikacji Digital Animal Farm](UI_View.png)
 
 ## Table of contents
 * [General info](#general-info)
